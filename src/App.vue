@@ -60,7 +60,7 @@
         .photo(style="width:330px; height: 200px")
           img(src="@/assets/man.jpg" width="100%" height="100%" )
         .info
-          .users
+          .users(:class="{'archived' : showArchive}")
             b {{user.lastName}} {{user.firstName}} {{user.middleName}}
             b {{user.status}}
             b {{user.carInfo}}
@@ -381,5 +381,8 @@ button:nth-child(2) {
 .center {
   justify-content: center;
   align-items: center;
+}
+.archived {
+  background: rgba(250, 100, 0, .5); 
 }
 </style>
