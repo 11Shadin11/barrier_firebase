@@ -1,19 +1,21 @@
 <template lang="pug">
-  #app
+  #app(:class="{'center' : showForm}")
     .form(v-if="showForm")
       
+      h2(style="font-weigth: 900; color: #fff") Добавление нового пользователья
+
       .d-flex
         select( style="width: 80%" ref="r" placeholder="Марка и модель авто")
           option( v-for="car in cars" :value="car.auto_model") {{car.auto_model}}
-        button.addUser(style="margin: 10px; width: 20%" @click="showAddAuto = true") +
+        button.addUser(style="margin: 10px 0 10px 10px; width: 20%" @click="showAddAuto = true") +
       
       .d-flex(v-if="showAddAuto")
         select( style="width: 80%" ref="auto" placeholder="Марка и модель авто")
           option( v-for="car in allCars" :value="car.auto_model") {{car.auto_model}}
-        button.addUser(style="margin: 10px; width: 20%" @click="addNewAuto()") Добавить новый автомобиль
+        button.addUser(style="margin: 10px 0 10px 10px; width: 20%" @click="addNewAuto()") Добавить новый автомобиль
 
       select( ref="color" placeholder="Цвет Авто")
-        option( value="" selected) Цвет авто
+        option( value="" selected) Выбери цвет авто
         option( value="Красный") Красный
         option( value="Зеленный") Зеленный
         option( value="Желтый") Желтый
@@ -28,40 +30,47 @@
         option( value="Универсал") Универсал
         option( value="Внедорожник") Внедорожник
 
+      input( ref="t" placeholder="Регистрационный знак авто" type="text")
+
       input( ref="w" placeholder="Фамилия" type="text")
       input( ref="q" placeholder="Имя" type="text")
       input( ref="e" placeholder="Отчество" type="text")
       
       
-      input( ref="t" placeholder="Регистрационный знак авто" type="text")
-      input( ref="y" placeholder="Номер телефона" type="text")
+      input#phone( ref="y" @input="phone()" placeholder="Номер телефона" type="tel")
       input( ref="u" placeholder="Номер квартиры" type="text")
       
       select( ref="i" placeholder="Статус жильца")
-        option( value="Владелец" selected) Владелец
+        option( value="" selected) Выберите статус жильца
+        option( value="Владелец") Владелец
         option( value="Арендатор") Арендатор
 
       .d-flex
         button.addUser(@click="addNewUser" fab) Добавить
         button.addUser(@click="showForm = false" fab) Отменить
-    .d-flex(v-if="!showForm")
+    
+    .d-flex(v-if="!showForm" style="padding: 50px 10% 0 10%")
       button.addUser( @click="showForm = true") Добавить нового пользователья
-      button.addUser( @click="showArchive = !showArchive") {{!showArchive ? "Показать архивированных пользователей" : "Скрыть архивированных пользователей" }}
+      button.addUser( @click="showArchive = !showArchive" :class="{'active' : showArchive }") {{!showArchive ? "Показать архивированных пользователей" : "Скрыть архивированных пользователей" }}
       input(style="margin: 0 10px; border-radius: 5px" type="date" v-model="dateFilter")
 
-    .allUsers
+    .allUsers(v-if="!showForm")
+      h2(style="font-weigth: 900; padding: 50px 0; color:#fff") {{!showArchive ? "Активные пользователи" : "Архивированные пользователи" }} | {{returnUsers.length}}
       .content-users(v-for="user in returnUsers")
-        .users
-          b {{user.lastName}} {{user.firstName}} {{user.middleName}}
-          b {{user.status}}
-          b {{user.carInfo}}
-          b {{user.typeCar}}
-          b {{user.colorAuto}}
-          b {{user.carRegNumber}}
-          b № Кв: {{user.appartmentNumber}}
-          b Тел. : {{user.phoneNuber}}
-          b {{showArchive ? "Дата архивации" : "Дата добавления"}} : {{user.startDate}}
-        button.addUser(v-if="!showArchive" @click="archivedUset(user)") Архивировать
+        .photo(style="width:330px; height: 200px")
+          img(src="@/assets/man.jpg" width="100%" height="100%" )
+        .info
+          .users
+            b {{user.lastName}} {{user.firstName}} {{user.middleName}}
+            b {{user.status}}
+            b {{user.carInfo}}
+            b {{user.typeCar}}
+            b {{user.colorAuto}}
+            b {{user.carRegNumber}}
+            b № Кв: {{user.appartmentNumber}}
+            b Тел. : {{user.phoneNuber}}
+            b {{showArchive ? "Дата архивации" : "Дата добавления"}} : {{user.startDate}}
+          button.addUser( style="margin-left: 0" v-if="!showArchive" @click="archivedUset(user)") Архивировать
       .content-users(v-if="showArchive && !archived.length" style="padding-top: 20px") Нет архивированных пользователей
 </template>
 
@@ -69,6 +78,7 @@
 import {getFirestore, onSnapshot, collection, doc, addDoc, deleteDoc, query} from 'firebase/firestore';
 import { initializeApp } from "firebase/app";
 import {ref,onUnmounted} from 'vue';
+import IMask from 'imask'
 
 const firebaseConfig = {
   apiKey: "AIzaSyDGiuTr7FlQRZXuYaR4aqNq2QWi0IQYhKY",
@@ -126,7 +136,25 @@ export default {
   },
 
   methods: {
-   
+
+    phone() {
+      let element = document.getElementById('phone');
+      let maskOptions = {
+        mask: '+7(000)000-00-00',
+        lazy: false
+      } 
+      element.innerText = new IMask(element, maskOptions);
+    },
+
+    carRegNum() {
+      let element = document.getElementById('carRegNum');
+      let maskOptions = {
+        mask: '*000** 00',
+        lazy: false
+      } 
+      element.innerText = new IMask(element, maskOptions);
+    },
+
     addNewAuto() {
       let obj = {auto_model: this.$refs.auto.value}
       
@@ -181,7 +209,7 @@ export default {
           colorAuto: doc._document.data.value.mapValue.fields.colorAuto.stringValue,
           typeCar: doc._document.data.value.mapValue.fields.typeCar.stringValue,
           status: doc._document.data.value.mapValue.fields.status.stringValue,
-          startDate: doc._document.data.value.mapValue.fields.startDate.timestampValue,
+          startDate: new Date(doc._document.data.value.mapValue.fields.startDate.timestampValue,).toDateString(),
           state: doc._document.data.value.mapValue.fields.state.integerValue
         }
       });
@@ -227,7 +255,7 @@ export default {
           phoneNuber: doc._document.data.value.mapValue.fields.phoneNuber.stringValue,
           colorAuto: doc._document.data.value.mapValue.fields.colorAuto.stringValue,
           typeCar: doc._document.data.value.mapValue.fields.typeCar.stringValue,
-          startDate: doc._document.data.value.mapValue.fields.startDate.timestampValue,
+          startDate: new Date(doc._document.data.value.mapValue.fields.startDate.timestampValue,).toDateString(),
           status: doc._document.data.value.mapValue.fields.status.stringValue,
           state: doc._document.data.value.mapValue.fields.state.integerValue
         }
@@ -239,25 +267,56 @@ export default {
 </script>
 
 <style>
+*{
+  margin: 0;
+  padding: 0;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
+  overflow-y: auto;
   color: #2c3e50;
-  margin: 60px 10% 0 10%;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  background: #292929;
+  box-shadow: 0 -200px 100px -120px rgba(255, 60, 0, 0.47) inset;
+  animation: background 6s infinite alternate;
+}
+
+@keyframes background {
+  50% {
+    background: #292929;;
+    box-shadow: 0 -200px 100px -100px #1d1d1d inset;
+  }
 }
 .content-users{
   display:flex;
   justify-content:center;
   align-items: center;
+  height: 200px;
+  margin-bottom: 20px;
 }
 .users b {
   margin-top: auto;
   margin-bottom: auto;
   color: #000;
+}
+
+.info {
+  width: 100%;
+  height: 100%;
+  padding: 0 10px;
+}
+.photo {
+  padding: 10px;
+}
+
+.photo img {
+  border-radius: 10px;
 }
 .users{
   cursor: pointer;
@@ -266,31 +325,38 @@ export default {
   justify-content:space-between;
   padding:10px;
   margin: 10px 0;
-  width: 100%;
-  background: rgb(156, 156, 156);
+  /* width: 100%; */
+  /* background: rgb(156, 156, 156); */
+  background: rgba(250, 100, 0, .9); 
   border-radius:5px;
-  height: 50px;
+  height: 50%;
 }
 .users:hover{
-  box-shadow: 0 0 10px #000;
+  box-shadow: 0 0 10px #646464;
 }
 .addUser {
   width: max-content;
   height: 40px;
-  border: 1px solid #004790;
+  border: 1px solid rgb(147, 34, 0);
   border-radius: 5px;
   padding: 5px 15px;
-  color: #004790;
-  background: transparent;
+  color: #ffffff;
+  background: rgba(255, 96, 0, .2);;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
 }
 .form {
+  width: 80%;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding: 15px;
+  border: 2px solid;
+  border-radius: 5px;
+  box-shadow: 0 0 10px #000;
+  background: zerkal;
 }
 
 input, select {
@@ -303,5 +369,17 @@ input, select {
 
 button:nth-child(2) {
   margin-left: 10px;
+}
+.active {
+  box-shadow: 5px 5px 5px #646464;
+  transform: translateY(-2px) scale(1.01);
+}
+.allUsers {
+  height: 100%;
+  padding: 0 10%;
+}
+.center {
+  justify-content: center;
+  align-items: center;
 }
 </style>
