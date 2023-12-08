@@ -29,6 +29,7 @@
         option( value="Кроссовер") Кроссовер
         option( value="Универсал") Универсал
         option( value="Внедорожник") Внедорожник
+        option( value="Кабриолет") Кабриолет
 
       input( ref="t" placeholder="Регистрационный знак авто" type="text")
 
@@ -51,26 +52,45 @@
     
     .d-flex(v-if="!showForm" style="padding: 50px 10% 0 10%")
       button.addUser( @click="showForm = true") Добавить нового пользователья
-      button.addUser( @click="showArchive = !showArchive" :class="{'active' : showArchive }") {{!showArchive ? "Показать архивированных пользователей" : "Скрыть архивированных пользователей" }}
-      input(style="margin: 0 10px; border-radius: 5px" type="date" v-model="dateFilter")
+      button.addUser( @click="openArchive" :class="{'active' : showArchive }") {{!showArchive ? "Показать архивированных пользователей" : "Скрыть архивированных пользователей" }}
+      input#date-input(style="margin: 0 10px; border-radius: 5px" type="date" v-model="dateFilter")
 
     .allUsers(v-if="!showForm")
-      h2(style="font-weigth: 900; padding: 50px 0; color:#fff") {{!showArchive ? "Активные пользователи" : "Архивированные пользователи" }} | {{returnUsers.length}}
+      h2(style="font-weigth: 900; padding: 50px 0; color:#fff") {{returnSectionName}}
       .content-users(v-for="user in returnUsers")
         .photo(style="width:330px; height: 200px")
-          img(src="@/assets/man.jpg" width="100%" height="100%" )
+          //- img(src="@/assets/man.jpg" width="100%" height="100%" )
+          img(src="@/assets/qwe.png" width="100%" height="100%" )
         .info
-          .users(:class="{'archived' : showArchive}")
-            b {{user.lastName}} {{user.firstName}} {{user.middleName}}
-            b {{user.status}}
-            b {{user.carInfo}}
-            b {{user.typeCar}}
-            b {{user.colorAuto}}
-            b {{user.carRegNumber}}
-            b № Кв: {{user.appartmentNumber}}
-            b Тел. : {{user.phoneNuber}}
-            b {{showArchive ? "Дата архивации" : "Дата добавления"}} : {{user.startDate}}
-          button.addUser( style="margin-left: 0" v-if="!showArchive" @click="archivedUset(user)") Архивировать
+          .users(:class="{'archived' : user.state == '0'}")
+            .d-flex.info-row
+              b Ф.И.О: 
+              b {{user.lastName}} {{user.firstName}} {{user.middleName}}
+            .d-flex.info-row
+              b Статус: 
+              b {{user.status}}
+            .d-flex.info-row
+              b Модель авто: 
+              b {{user.carInfo}}
+            .d-flex.info-row
+              b Кузов авто: 
+              b {{user.typeCar}}
+            .d-flex.info-row
+              b Цвет авто: 
+              b {{user.colorAuto}}
+            .d-flex.info-row
+              b Номера авто: 
+              b {{user.carRegNumber}}
+            .d-flex.info-row
+              b Номер квартиры: 
+              b № {{user.appartmentNumber}}
+            .d-flex.info-row
+              b Номер телефона: 
+              b {{user.phoneNuber}}
+            .d-flex.info-row
+              b {{showArchive ? "Дата архивации" : "Дата добавления"}}:
+              b {{user.startDate}}
+          button.addUser( style="margin-left: 0" v-if="user.state == '1'" @click="archivedUset(user)") Архивировать
       .content-users(v-if="showArchive && !archived.length" style="padding-top: 20px") Нет архивированных пользователей
 </template>
 
@@ -109,6 +129,11 @@ export default {
   },
 
   computed: {
+    returnSectionName() {
+      if(this.dateFilter) return "Найдено участинков по дате" + ' "' + this.dateFilter + '"' + ' (' + this.returnUsers.length + ')'
+      return (!this.showArchive ? "Активные пользователи" : "Архивированные пользователи") + ' (' + this.returnUsers.length + ')'
+    },
+
     returnUsers() {
       if(this.dateFilter) {
         let filter = []
@@ -136,6 +161,11 @@ export default {
   },
 
   methods: {
+
+    openArchive() {
+      this.dateFilter = null
+      this.showArchive = !this.showArchive
+    },
 
     phone() {
       let element = document.getElementById('phone');
@@ -321,6 +351,7 @@ export default {
 .users{
   cursor: pointer;
   display:flex;
+  flex-direction: column;
   flex-wrap: wrap;
   justify-content:space-between;
   padding:10px;
@@ -384,5 +415,12 @@ button:nth-child(2) {
 }
 .archived {
   background: rgba(250, 100, 0, .5); 
+}
+.info-row {
+  padding: 5px 0;
+}
+
+.info-row b:nth-child(2) {
+  padding-left: 5px;
 }
 </style>
